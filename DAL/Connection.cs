@@ -76,21 +76,26 @@ namespace DAL
                 cmd.Connection = Conn;
                 OracleDataReader dr = cmd.ExecuteReader(CommandBehavior.SequentialAccess);
                 byte[] buffer = null;
-                while (dr.Read())
+                if (dr.Read())
                 {
-                    blobDataSize = dr.GetBytes(0, 0, null, 0, 0); //獲取這個BLOB數據體的總大小
+                    blobDataSize = dr.GetBytes(0, 0, null, 0, 0); //get the BLOB data of total size
                     buffer = new byte[blobDataSize];
                     realReadSize = dr.GetBytes(0, readStartByte, buffer, bufferStartByte, hopeReadSize);
-                    while ((int)realReadSize == hopeReadSize)//用於循環讀取1024byte大小
+                    while ((int)realReadSize == hopeReadSize)//use for cyclic reading 1024bytes
                     {
                         bufferStartByte += hopeReadSize;
                         readStartByte += realReadSize;
                         realReadSize = dr.GetBytes(0, readStartByte, buffer, bufferStartByte, hopeReadSize);
                     }
-                    //讀取BLOB數據體最後剩餘的小於1024byte大小的數據
+                    //read the rest of data which are less than 1024 bytes from BLOB
+		    //after reading complete , the BLOB data transform to buffer as binary
                     dr.GetBytes(0, readStartByte, buffer, bufferStartByte, (int)realReadSize);
-                    //讀取完成后，BLOB數據體的二進制數據就轉換到這個byte數組buffer上去了
+                   
                 }
+		else 
+		{
+			buffer = null;
+		}
                 return buffer;
             }
             catch (OracleException ex)
